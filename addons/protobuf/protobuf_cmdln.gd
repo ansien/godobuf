@@ -71,6 +71,13 @@ func _init():
 		else:
 			error("should_prefix_enums is not true or false")
 
+	var custom_class_name = ""
+	if arguments.has("class_name"):
+		custom_class_name = arguments["class_name"]
+
+		if !custom_class_name.is_valid_identifier():
+			error("The provided class_name is not a valid identifier: " + custom_class_name)
+
 	var file = FileAccess.open(input_file_name, FileAccess.READ)
 	if file == null:
 		error("File: '" + input_file_name + "' not found.")
@@ -78,7 +85,9 @@ func _init():
 	var parser = Parser.new()
 
 	if parser.work(Util.extract_dir(input_file_name), Util.extract_filename(input_file_name), \
-		output_file_name, "res://addons/protobuf/protobuf_core.gd", message_prefix, should_prefix_enums):
+		output_file_name, "res://addons/protobuf/protobuf_core.gd", \
+		message_prefix, should_prefix_enums, custom_class_name):
+
 		print("Compiled '", input_file_name, "' to '", output_file_name, "'.")
 	else:
 		error("Compilation failed.")

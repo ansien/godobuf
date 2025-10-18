@@ -87,10 +87,18 @@ func _on_CompileButton_pressed():
 
 	var should_prefix_enums = $EnumPrefixCheckButton.is_pressed()
 
+	var custom_class_name = ""
+	if $ClassNameCheckButton.is_pressed():
+		custom_class_name = $HBoxContainer4/ClassNameEdit.text
+
+		if !custom_class_name.is_valid_identifier():
+			show_dialog($ClassNameErrorAcceptDialog)
+			return
+
 	var parser = Parser.new()
 	
 	if parser.work(Util.extract_dir(input_file_path), Util.extract_filename(input_file_path), \
-		output_file_path, "res://addons/protobuf/protobuf_core.gd", message_prefix, should_prefix_enums):
+		output_file_path, "res://addons/protobuf/protobuf_core.gd", message_prefix, should_prefix_enums, custom_class_name):
 		show_dialog($SuccessAcceptDialog)
 	else:
 		show_dialog($FailAcceptDialog)

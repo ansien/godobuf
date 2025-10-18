@@ -68,10 +68,23 @@ text = "Use the prefix in enum names?"
 [node name="HSeparator2" type="HSeparator" parent="."]
 layout_mode = 2
 
-[node name="HSeparator2" type="HSeparator" parent="HSeparator2"]
+[node name="ClassNameCheckButton" type="CheckButton" parent="."]
 layout_mode = 2
-offset_right = 421.0
-offset_bottom = 4.0
+text = "Use a custom class_name?"
+
+[node name="HBoxContainer4" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="ClassNameLabel" type="Label" parent="HBoxContainer4"]
+layout_mode = 2
+text = "Class name:"
+
+[node name="ClassNameEdit" type="LineEdit" parent="HBoxContainer4"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HSeparator3" type="HSeparator" parent="."]
+layout_mode = 2
 
 [node name="Control" type="Control" parent="."]
 layout_mode = 2
@@ -113,6 +126,9 @@ dialog_text = "Need select both output & input files!"
 
 [node name="PrefixErrorAcceptDialog" type="AcceptDialog" parent="."]
 dialog_text = "The provided prefix is not a valid identifier!"
+
+[node name="ClassNameAcceptDialog" type="AcceptDialog" parent="."]
+dialog_text = "The provided class_name is not a valid identifier!"
 
 [node name="SuccessAcceptDialog" type="AcceptDialog" parent="."]
 dialog_text = "Compile success done."
