@@ -43,6 +43,18 @@ class Document:
 	var name : String
 	var text : String
 
+class PrefixOptions:
+
+	func _init(pre : String, spe : bool = false, cn : String = ""):
+		prefix = pre
+		should_prefix_enums = spe
+		custom_class_name = cn
+
+	var prefix: String = ""
+	var should_prefix_enums : bool
+	var custom_class_name: String = ""
+
+
 class TokenPosition:
 	func _init(b : int, e : int):
 		begin = b
@@ -1693,9 +1705,11 @@ class Translator:
 			return text + "RESERVED"
 		return text
 	
-	func generate_gdscript_type(field : Analysis.ASTField) -> String:
+	func generate_gdscript_type(field : Analysis.ASTField, prefix_options : PrefixOptions) -> String:
 		if field.field_type == Analysis.FIELD_TYPE.MESSAGE:
 			var type_name : String = class_table[field.type_class_id].parent_name + "." + class_table[field.type_class_id].name
+			type_name = type_name.replace(".", "." + prefix_options.prefix)
+
 			return type_name.substr(1, type_name.length() - 1)
 		return generate_gdscript_simple_type(field)
 
@@ -1734,14 +1748,14 @@ class Translator:
 			return "PackedByteArray"
 		return ""
 
-	func generate_field_constructor(field_index : int, nesting : int) -> String:
+	func generate_field_constructor(field_index : int, nesting : int, prefix_options : PrefixOptions) -> String:
 		var text : String = ""
 		var f : Analysis.ASTField = field_table[field_index]
 		var field_name : String = "__" + f.name
 		var pbfield_text : String
 		var default_var_name := field_name + "_default"
 		if f.qualificator == Analysis.FIELD_QUALIFICATOR.REPEATED:
-			var type_name := generate_gdscript_type(f)
+			var type_name := generate_gdscript_type(f, prefix_options)
 			if type_name:
 				text = tabulate("var %s: Array[%s] = []\n" % [default_var_name, type_name], nesting)
 			else:
@@ -1804,13 +1818,14 @@ class Translator:
 						return text
 		return ""
 	
-	func generate_field(field_index : int, nesting : int) -> String:
+	func generate_field(field_index : int, nesting : int, prefix_options : PrefixOptions) -> String:
 		var text : String = ""
 		var f : Analysis.ASTField = field_table[field_index]
 		var varname : String = "__" + f.name
 		text += tabulate("var " + varname + ": PBField\n", nesting)
 		if f.field_type == Analysis.FIELD_TYPE.MESSAGE:
 			var the_class_name : String = class_table[f.type_class_id].parent_name + "." + class_table[f.type_class_id].name
+			the_class_name = the_class_name.replace(".", "." + prefix_options.prefix)
 			the_class_name = the_class_name.substr(1, the_class_name.length() - 1)
 			if f.qualificator != Analysis.FIELD_QUALIFICATOR.OPTIONAL:
 				text += generate_has_oneof(field_index, nesting)
@@ -1851,7 +1866,9 @@ class Translator:
 				text += tabulate("return " + varname + ".value\n", nesting)
 		elif f.field_type == Analysis.FIELD_TYPE.MAP:
 			var the_parent_class_name : String = class_table[f.type_class_id].parent_name
+			the_parent_class_name = the_parent_class_name.replace(".", "." + prefix_options.prefix)
 			the_parent_class_name = the_parent_class_name.substr(1, the_parent_class_name.length() - 1)
+
 			var the_class_name : String = the_parent_class_name + "." + class_table[f.type_class_id].name
 
 			text += generate_has_oneof(field_index, nesting)
@@ -1876,7 +1893,7 @@ class Translator:
 					if gd_type != "":
 						value_return_type = return_type
 					elif field_table[i].field_type == Analysis.FIELD_TYPE.MESSAGE:
-						value_return_type = " -> " + the_parent_class_name + "." + field_table[i].type_name
+						value_return_type = " -> " + generate_gdscript_type(field_table[i], prefix_options)
 					text += tabulate("func add_empty_" + f.name + "()" + return_type + ":\n", nesting)
 					nesting += 1
 					text += generate_group_clear(field_index, nesting)
@@ -1974,11 +1991,14 @@ class Translator:
 				text += tabulate(varname + ".value = value\n", nesting)
 		return text
 
-	func generate_class(class_index : int, nesting : int) -> String:
+	func generate_class(class_index : int, nesting : int, prefix_options : PrefixOptions) -> String:
 		var text : String = ""
 		if class_table[class_index].type == Analysis.CLASS_TYPE.MESSAGE || class_table[class_index].type == Analysis.CLASS_TYPE.MAP:
 			var cls_pref : String = ""
-			cls_pref += tabulate("class " + class_table[class_index].name + ":\n", nesting)
+			if class_table[class_index].type == Analysis.CLASS_TYPE.MESSAGE:
+				cls_pref += tabulate("class " + prefix_options.prefix + class_table[class_index].name + ":\n", nesting)
+			elif class_table[class_index].type == Analysis.CLASS_TYPE.MAP:
+				cls_pref += tabulate("class " + class_table[class_index].name + ":\n", nesting)
 			nesting += 1
 			cls_pref += tabulate("func _init():\n", nesting)
 			text += cls_pref
@@ -1988,9 +2008,9 @@ class Translator:
 			var field_text : String = ""
 			for i in range(field_table.size()):
 				if field_table[i].parent_class_id == class_index:
-					text += generate_field_constructor(i, nesting)
+					text += generate_field_constructor(i, nesting, prefix_options)
 					text += tabulate("\n", nesting)
-					field_text += generate_field(i, nesting - 1)
+					field_text += generate_field(i, nesting - 1, prefix_options)
 					field_text += tabulate("\n", nesting - 1)
 			nesting -= 1
 			text += tabulate("var data = {}\n", nesting)
@@ -1998,16 +2018,21 @@ class Translator:
 			text += field_text
 			for j in range(class_table.size()):
 				if class_table[j].parent_index == class_index:
-					var cl_text = generate_class(j, nesting)
+					var cl_text = generate_class(j, nesting, prefix_options)
 					text += cl_text
 					if class_table[j].type == Analysis.CLASS_TYPE.MESSAGE || class_table[j].type == Analysis.CLASS_TYPE.MAP:
 						text += generate_class_services(nesting + 1)
 						text += tabulate("\n", nesting + 1)
 		elif class_table[class_index].type == Analysis.CLASS_TYPE.ENUM:
-			text += tabulate("enum " + class_table[class_index].name + " {\n", nesting)
+
+			if prefix_options.should_prefix_enums:
+				text += tabulate("enum " + prefix_options.prefix + class_table[class_index].name + " {\n", nesting)
+			else:
+				text += tabulate("enum " + class_table[class_index].name + " {\n", nesting)
 			nesting += 1
 
 			var expected_prefix = class_table[class_index].name.to_snake_case().to_upper() + "_"
+
 			var all_have_prefix = true
 			for en in range(class_table[class_index].values.size()):
 				var value_name = class_table[class_index].values[en].name
@@ -2067,7 +2092,7 @@ class Translator:
 		text += tabulate("return result\n", nesting)
 		return text
 	
-	func translate(file_name : String, core_file_name : String) -> bool:
+	func translate(file_name : String, core_file_name : String, prefix_options : PrefixOptions) -> bool:
 
 		var file : FileAccess = FileAccess.open(file_name, FileAccess.WRITE)
 		if file == null:
@@ -2088,12 +2113,14 @@ class Translator:
 		var text : String = ""
 		var nesting : int = 0
 		core_text = core_text.replace(PROTO_VERSION_DEFAULT, PROTO_VERSION_CONST + str(proto_version))
+		if prefix_options.custom_class_name != "":
+			text += "class_name " + prefix_options.custom_class_name + "\n\n"
 		text += core_text + "\n\n\n"
 		text += "############### USER DATA BEGIN ################\n"
 		var cls_user : String = ""
 		for i in range(class_table.size()):
 			if class_table[i].parent_index == -1:
-				var cls_text = generate_class(i, nesting)
+				var cls_text = generate_class(i, nesting, prefix_options)
 				cls_user += cls_text
 				if class_table[i].type == Analysis.CLASS_TYPE.MESSAGE:
 					nesting += 1
@@ -2209,7 +2236,7 @@ func semantic_all(analyzes : Dictionary, imports : Array)-> bool:
 			return false
 	return true
 	
-func translate_all(analyzes : Dictionary, file_name : String, core_file_name : String) -> bool:
+func translate_all(analyzes : Dictionary, file_name : String, core_file_name : String, prefix_options : PrefixOptions) -> bool:
 	var first_key : String = analyzes.keys()[0]
 	var analyze : AnalyzeResult = analyzes[first_key]
 	var keys : Array = []
@@ -2221,15 +2248,25 @@ func translate_all(analyzes : Dictionary, file_name : String, core_file_name : S
 		return false
 	print("Performing translation.")
 	var translator : Translator = Translator.new(analyze)
-	if !translator.translate(file_name, core_file_name):
+	if !translator.translate(file_name, core_file_name, prefix_options):
 		return false
 	var first : bool = true
 	return true
 
-func work(path : String, in_file : String, out_file : String, core_file : String) -> bool:
+func work(
+	path : String,
+	in_file : String,
+	out_file : String,
+	core_file : String,
+	custom_prefix : String = "",
+	should_prefix_enums : bool = false,
+	custom_class_name : String = "",
+) -> bool:
+
 	var in_full_name : String = path + in_file
 	var imports : Array = []
 	var analyzes : Dictionary = {}
+	var prefix_options : PrefixOptions = PrefixOptions.new(custom_prefix, should_prefix_enums, custom_class_name)
 	
 	print("Compiling source: '", in_full_name, "', output: '", out_file, "'.")
 	print("\n1. Parsing:")
@@ -2243,7 +2280,7 @@ func work(path : String, in_file : String, out_file : String, core_file : String
 	else:
 		return false
 	print("\n3. Output file creating:")
-	if translate_all(analyzes, out_file, core_file):
+	if translate_all(analyzes, out_file, core_file, prefix_options):
 		print("* Output file was created successfully. *")
 	else:
 		return false

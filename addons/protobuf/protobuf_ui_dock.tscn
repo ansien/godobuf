@@ -43,6 +43,49 @@ editable = false
 layout_mode = 2
 text = "..."
 
+[node name="HSeparator" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="MessagePrefixCheckButton" type="CheckButton" parent="."]
+layout_mode = 2
+text = "Use a custom message prefix?"
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="MessagePrefixLabel" type="Label" parent="HBoxContainer3"]
+layout_mode = 2
+text = "Prefix:"
+
+[node name="MessagePrefixEdit" type="LineEdit" parent="HBoxContainer3"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EnumPrefixCheckButton" type="CheckButton" parent="."]
+layout_mode = 2
+text = "Use the prefix in enum names?"
+
+[node name="HSeparator2" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="ClassNameCheckButton" type="CheckButton" parent="."]
+layout_mode = 2
+text = "Use a custom class_name?"
+
+[node name="HBoxContainer4" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="ClassNameLabel" type="Label" parent="HBoxContainer4"]
+layout_mode = 2
+text = "Class name:"
+
+[node name="ClassNameEdit" type="LineEdit" parent="HBoxContainer4"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HSeparator3" type="HSeparator" parent="."]
+layout_mode = 2
+
 [node name="Control" type="Control" parent="."]
 layout_mode = 2
 
@@ -68,10 +111,9 @@ offset_bottom = 129.0
 text = "Run unit tests (proto 3)"
 
 [node name="InputFileDialog" type="FileDialog" parent="."]
-access = 2
-filters = PackedStringArray("*.proto; Google Protobuf File")
-
-[node name="InputFileDialog2" type="FileDialog" parent="."]
+title = "Open a File"
+ok_button_text = "Open"
+file_mode = 0
 access = 2
 filters = PackedStringArray("*.proto; Google Protobuf File")
 
@@ -81,6 +123,12 @@ filters = PackedStringArray("*.gd; GDScript")
 
 [node name="FilesErrorAcceptDialog" type="AcceptDialog" parent="."]
 dialog_text = "Need select both output & input files!"
+
+[node name="PrefixErrorAcceptDialog" type="AcceptDialog" parent="."]
+dialog_text = "The provided prefix is not a valid identifier!"
+
+[node name="ClassNameAcceptDialog" type="AcceptDialog" parent="."]
+dialog_text = "The provided class_name is not a valid identifier!"
 
 [node name="SuccessAcceptDialog" type="AcceptDialog" parent="."]
 dialog_text = "Compile success done."
@@ -102,5 +150,4 @@ See console for details."
 [connection signal="pressed" from="Control/TestButton2" to="." method="_on_TestButton2_pressed"]
 [connection signal="pressed" from="Control/TestButton3" to="." method="_on_TestButton3_pressed"]
 [connection signal="file_selected" from="InputFileDialog" to="." method="_on_InputFileDialog_file_selected"]
-[connection signal="file_selected" from="InputFileDialog2" to="." method="_on_InputFileDialog_file_selected"]
 [connection signal="file_selected" from="OutputFileDialog" to="." method="_on_OutputFileDialog_file_selected"]

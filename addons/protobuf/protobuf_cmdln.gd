@@ -45,11 +45,38 @@ func _init():
 			var key_value = argument.split("=")
 			arguments[key_value[0].lstrip("--")] = key_value[1]
 
-	if !arguments.has("input") || !arguments.has("output"):
-		error("Expected 2 Parameters: input and output")
-
+	if !arguments.has("input"):
+		error("Missing required argument: input")
 	var input_file_name = arguments["input"]
+
+	if !arguments.has("output"):
+		error("Missing required argument: output")
 	var output_file_name = arguments["output"]
+
+	var message_prefix = ""
+	if arguments.has("prefix"):
+		message_prefix = arguments["prefix"]
+
+		if !message_prefix.is_valid_identifier():
+			error("The provided prefix is not a valid identifier: " + message_prefix)
+
+	var should_prefix_enums = false
+	if arguments.has("should_prefix_enums"):
+		var should_prefix_enum_arg = arguments["should_prefix_enums"]
+
+		if should_prefix_enum_arg == "true":
+			should_prefix_enums = true
+		elif should_prefix_enum_arg == "false":
+			should_prefix_enums = false
+		else:
+			error("should_prefix_enums is not true or false")
+
+	var custom_class_name = ""
+	if arguments.has("class_name"):
+		custom_class_name = arguments["class_name"]
+
+		if !custom_class_name.is_valid_identifier():
+			error("The provided class_name is not a valid identifier: " + custom_class_name)
 
 	var file = FileAccess.open(input_file_name, FileAccess.READ)
 	if file == null:
@@ -58,7 +85,9 @@ func _init():
 	var parser = Parser.new()
 
 	if parser.work(Util.extract_dir(input_file_name), Util.extract_filename(input_file_name), \
-		output_file_name, "res://addons/protobuf/protobuf_core.gd"):
+		output_file_name, "res://addons/protobuf/protobuf_core.gd", \
+		message_prefix, should_prefix_enums, custom_class_name):
+
 		print("Compiled '", input_file_name, "' to '", output_file_name, "'.")
 	else:
 		error("Compilation failed.")
