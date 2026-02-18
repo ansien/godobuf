@@ -35,8 +35,8 @@ extends VBoxContainer
 var Parser = preload("res://addons/protobuf/parser.gd")
 var Util = preload("res://addons/protobuf/protobuf_util.gd")
 
-var input_file_path = null
-var output_file_path = null
+var input_file_path: String = ""
+var output_file_path: String = ""
 
 func _ready():
 	pass
@@ -44,12 +44,10 @@ func _ready():
 func _on_InputFileButton_pressed():
 	
 	show_dialog($InputFileDialog)
-	$InputFileDialog.invalidate()
 
 func _on_OutputFileButton_pressed():
 	
 	show_dialog($OutputFileDialog)
-	$OutputFileDialog.invalidate()
 
 func _on_InputFileDialog_file_selected(path):
 	
@@ -63,11 +61,13 @@ func _on_OutputFileDialog_file_selected(path):
 
 func show_dialog(dialog):
 	
+	if dialog.has_method("invalidate"):
+		dialog.invalidate()
 	dialog.popup_centered()
 
 func _on_CompileButton_pressed():
 	
-	if input_file_path == null || output_file_path == null:
+	if input_file_path.is_empty() || output_file_path.is_empty():
 		show_dialog($FilesErrorAcceptDialog)
 		return
 	
@@ -92,7 +92,7 @@ func _on_CompileButton_pressed():
 		custom_class_name = $HBoxContainer4/ClassNameEdit.text
 
 		if !custom_class_name.is_valid_identifier():
-			show_dialog($ClassNameErrorAcceptDialog)
+			show_dialog($ClassNameAcceptDialog)
 			return
 
 	var parser = Parser.new()
@@ -114,8 +114,8 @@ func execute_unit_tests(source_name, script_name, compiled_script_name):
 	var test_output_dir_path = test_path + "temp"
 	var test_output_file_path = test_output_dir_path + "/" + compiled_script_name
 	
-	var output_dir = DirAccess.make_dir_absolute(test_output_dir_path)
-	if output_dir == null:
+	var output_dir_result = DirAccess.make_dir_recursive_absolute(test_output_dir_path)
+	if output_dir_result != OK and output_dir_result != ERR_ALREADY_EXISTS:
 		print("Cannot create output directory: '", test_output_dir_path, "'.")
 		show_dialog($FailAcceptDialog)
 		return
