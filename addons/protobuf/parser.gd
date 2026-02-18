@@ -1190,9 +1190,21 @@ class Analysis:
 			if indexed_tokens[offset].token.text == "public":
 				public = true
 			offset += 1
-		var f_name : String = path_dir + get_text_from_token(indexed_tokens[offset].token)
-		var sha : String = FileAccess.get_sha256(f_name)
-		if FileAccess.file_exists(f_name):
+		var import_name : String = get_text_from_token(indexed_tokens[offset].token)
+		var candidate_paths : Array = [path_dir + import_name]
+		if import_name.contains("/"):
+			var slash_pos = import_name.find("/")
+			if slash_pos >= 0 and slash_pos + 1 < import_name.length():
+				candidate_paths.append(path_dir + import_name.substr(slash_pos + 1))
+
+		var f_name : String = ""
+		for candidate in candidate_paths:
+			if FileAccess.file_exists(candidate):
+				f_name = candidate
+				break
+
+		if f_name != "":
+			var sha : String = FileAccess.get_sha256(f_name)
 			for i in import_table:
 				if i.path == f_name:
 					result.success = false
@@ -1208,16 +1220,14 @@ class Analysis:
 		else:
 			result.success = false
 			result.error = indexed_tokens[offset].index
-			result.description = "Import file '" + f_name + "' not found."
+			result.description = "Import file '" + import_name + "' not found."
 		return result
 		
 	func desc_package(indexed_tokens : Array, settings : CompareSettings) -> DescriptionResult:
-		printerr("UNRELEASED desc_package: ", indexed_tokens.size(), ", nesting: ", settings.nesting)
 		var result : DescriptionResult = DescriptionResult.new()
 		return result
 		
 	func desc_option(indexed_tokens : Array, settings : CompareSettings) -> DescriptionResult:
-		printerr("UNRELEASED desc_option: ", indexed_tokens.size(), ", nesting: ", settings.nesting)
 		var result : DescriptionResult = DescriptionResult.new()
 		return result
 	
