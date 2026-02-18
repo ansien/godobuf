@@ -11,6 +11,10 @@ offset_bottom = -374.0
 size_flags_horizontal = 0
 script = ExtResource("1")
 
+[node name="SingleConversionLabel" type="Label" parent="."]
+layout_mode = 2
+text = "Single file conversion"
+
 [node name="InputFileLabel" type="Label" parent="."]
 layout_mode = 2
 text = "Input protobuf file:"
@@ -43,8 +47,59 @@ editable = false
 layout_mode = 2
 text = "..."
 
+[node name="CompileButton" type="Button" parent="."]
+layout_mode = 2
+text = "Compile single file"
+
 [node name="HSeparator" type="HSeparator" parent="."]
 layout_mode = 2
+
+[node name="BatchConversionLabel" type="Label" parent="."]
+layout_mode = 2
+text = "Directory conversion"
+
+[node name="InputDirLabel" type="Label" parent="."]
+layout_mode = 2
+text = "Input proto directory:"
+
+[node name="HBoxContainer5" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="InputDirEdit" type="LineEdit" parent="HBoxContainer5"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+editable = false
+
+[node name="InputDirButton" type="Button" parent="HBoxContainer5"]
+layout_mode = 2
+text = "..."
+
+[node name="OutputDirLabel" type="Label" parent="."]
+layout_mode = 2
+text = "Output directory:"
+
+[node name="HBoxContainer6" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="OutputDirEdit" type="LineEdit" parent="HBoxContainer6"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+editable = false
+
+[node name="OutputDirButton" type="Button" parent="HBoxContainer6"]
+layout_mode = 2
+text = "..."
+
+[node name="CompileDirectoryButton" type="Button" parent="."]
+layout_mode = 2
+text = "Compile directory"
+
+[node name="HSeparator2" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="CompileOptionsLabel" type="Label" parent="."]
+layout_mode = 2
+text = "Compile options"
 
 [node name="MessagePrefixCheckButton" type="CheckButton" parent="."]
 layout_mode = 2
@@ -65,9 +120,6 @@ size_flags_horizontal = 3
 layout_mode = 2
 text = "Use the prefix in enum names?"
 
-[node name="HSeparator2" type="HSeparator" parent="."]
-layout_mode = 2
-
 [node name="ClassNameCheckButton" type="CheckButton" parent="."]
 layout_mode = 2
 text = "Use a custom class_name?"
@@ -86,29 +138,21 @@ size_flags_horizontal = 3
 [node name="HSeparator3" type="HSeparator" parent="."]
 layout_mode = 2
 
-[node name="Control" type="Control" parent="."]
+[node name="TestsLabel" type="Label" parent="."]
 layout_mode = 2
+text = "Tests"
 
-[node name="CompileButton" type="Button" parent="Control"]
-layout_mode = 0
-offset_top = 15.0
-offset_right = 178.0
-offset_bottom = 35.0
-text = "Compile"
-
-[node name="TestButton2" type="Button" parent="Control"]
-layout_mode = 0
-offset_top = 81.0
-offset_right = 178.0
-offset_bottom = 101.0
+[node name="TestButton2" type="Button" parent="."]
+layout_mode = 2
 text = "Run unit tests (proto 2)"
 
-[node name="TestButton3" type="Button" parent="Control"]
-layout_mode = 0
-offset_top = 109.0
-offset_right = 178.0
-offset_bottom = 129.0
+[node name="TestButton3" type="Button" parent="."]
+layout_mode = 2
 text = "Run unit tests (proto 3)"
+
+[node name="TestBatchButton" type="Button" parent="."]
+layout_mode = 2
+text = "Run batch compile tests"
 
 [node name="InputFileDialog" type="FileDialog" parent="."]
 title = "Open a File"
@@ -121,8 +165,17 @@ filters = PackedStringArray("*.proto; Google Protobuf File")
 access = 2
 filters = PackedStringArray("*.gd; GDScript")
 
+[node name="InputDirDialog" type="FileDialog" parent="."]
+access = 2
+
+[node name="OutputDirDialog" type="FileDialog" parent="."]
+access = 2
+
 [node name="FilesErrorAcceptDialog" type="AcceptDialog" parent="."]
 dialog_text = "Need select both output & input files!"
+
+[node name="DirsErrorAcceptDialog" type="AcceptDialog" parent="."]
+dialog_text = "Need select both output & input directories!"
 
 [node name="PrefixErrorAcceptDialog" type="AcceptDialog" parent="."]
 dialog_text = "The provided prefix is not a valid identifier!"
@@ -146,8 +199,14 @@ See console for details."
 
 [connection signal="pressed" from="HBoxContainer/InputFileButton" to="." method="_on_InputFileButton_pressed"]
 [connection signal="pressed" from="HBoxContainer2/OutputFileButton" to="." method="_on_OutputFileButton_pressed"]
-[connection signal="pressed" from="Control/CompileButton" to="." method="_on_CompileButton_pressed"]
-[connection signal="pressed" from="Control/TestButton2" to="." method="_on_TestButton2_pressed"]
-[connection signal="pressed" from="Control/TestButton3" to="." method="_on_TestButton3_pressed"]
+[connection signal="pressed" from="HBoxContainer5/InputDirButton" to="." method="_on_InputDirButton_pressed"]
+[connection signal="pressed" from="HBoxContainer6/OutputDirButton" to="." method="_on_OutputDirButton_pressed"]
+[connection signal="pressed" from="CompileButton" to="." method="_on_CompileButton_pressed"]
+[connection signal="pressed" from="CompileDirectoryButton" to="." method="_on_CompileDirectoryButton_pressed"]
+[connection signal="pressed" from="TestButton2" to="." method="_on_TestButton2_pressed"]
+[connection signal="pressed" from="TestButton3" to="." method="_on_TestButton3_pressed"]
+[connection signal="pressed" from="TestBatchButton" to="." method="_on_TestBatchButton_pressed"]
 [connection signal="file_selected" from="InputFileDialog" to="." method="_on_InputFileDialog_file_selected"]
 [connection signal="file_selected" from="OutputFileDialog" to="." method="_on_OutputFileDialog_file_selected"]
+[connection signal="dir_selected" from="InputDirDialog" to="." method="_on_InputDirDialog_dir_selected"]
+[connection signal="dir_selected" from="OutputDirDialog" to="." method="_on_OutputDirDialog_dir_selected"]

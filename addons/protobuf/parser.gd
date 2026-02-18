@@ -1232,10 +1232,12 @@ class Analysis:
 			if indexed_tokens[offset].token.id == TOKEN_ID.FIELD_QUALIFICATION:
 				if indexed_tokens[offset].token.text == "repeated":
 					qualifcator = FIELD_QUALIFICATOR.REPEATED
-				elif indexed_tokens[offset].token.text == "required" || indexed_tokens[offset].token.text == "optional":
+				elif indexed_tokens[offset].token.text == "optional":
+					qualifcator = FIELD_QUALIFICATOR.OPTIONAL
+				elif indexed_tokens[offset].token.text == "required":
 					result.success = false
 					result.error = indexed_tokens[offset].index
-					result.description = "Using the 'required' or 'optional' qualificator is unacceptable in Protobuf v3."
+					result.description = "Using the 'required' qualificator is unacceptable in Protobuf v3."
 					return result
 				offset += 1
 		if proto_version == 2:
@@ -2295,6 +2297,74 @@ func work(
 		print("* Output file was created successfully. *")
 	else:
 		return false
+	return true
+
+func _normalize_dir_path(path : String) -> String:
+	if path.ends_with("/"):
+		return path
+	return path + "/"
+
+func _collect_proto_files(base_dir : String, relative_dir : String, files : Array) -> bool:
+	var current_dir = base_dir + relative_dir
+	var dir = DirAccess.open(current_dir)
+	if dir == null:
+		printerr("Cannot open directory: '", current_dir, "'.")
+		return false
+
+	dir.list_dir_begin()
+	while true:
+		var name = dir.get_next()
+		if name == "":
+			break
+		if name.begins_with("."):
+			continue
+		var rel_path = relative_dir + name
+		if dir.current_is_dir():
+			if !_collect_proto_files(base_dir, rel_path + "/", files):
+				dir.list_dir_end()
+				return false
+		elif name.get_extension().to_lower() == "proto":
+			files.append(rel_path)
+	dir.list_dir_end()
+	return true
+
+func work_directory(
+	input_dir : String,
+	output_dir : String,
+	core_file : String,
+	custom_prefix : String = "",
+	should_prefix_enums : bool = false,
+	custom_class_name : String = "",
+) -> bool:
+	var normalized_input_dir = _normalize_dir_path(input_dir)
+	var normalized_output_dir = _normalize_dir_path(output_dir)
+
+	var proto_files : Array = []
+	if !_collect_proto_files(normalized_input_dir, "", proto_files):
+		return false
+	if proto_files.is_empty():
+		printerr("No .proto files found in directory: '", input_dir, "'.")
+		return false
+
+	proto_files.sort()
+	for proto_file in proto_files:
+		var output_file = normalized_output_dir + proto_file.get_basename() + ".gd"
+		var output_dir_result = DirAccess.make_dir_recursive_absolute(output_file.get_base_dir())
+		if output_dir_result != OK and output_dir_result != ERR_ALREADY_EXISTS:
+			printerr("Cannot create output directory: '", output_file.get_base_dir(), "'.")
+			return false
+
+		if !work(
+			normalized_input_dir,
+			proto_file,
+			output_file,
+			core_file,
+			custom_prefix,
+			should_prefix_enums,
+			custom_class_name
+		):
+			return false
+
 	return true
 
 func _ready():

@@ -2,6 +2,7 @@
 
 ## Changelog in v0.7.0
 - Godot 4.6 compatibility
+- Added support for directory input
 
 ## Changelog in v0.6.1
 - Some bugs fixed
@@ -74,13 +75,19 @@ Godobuf is easy to use and does not require rebuilding the Godot engine because 
 9. If compilation was successful a new GDScript will be created in a specified directory.
 10. Use the script in your project.
 
+### From the User Interface (Directory conversion)
+1. In the `Directory conversion` section, open `Input proto directory` and select a directory with `.proto` files.
+2. Open `Output directory` and select where generated `.gd` files should be written.
+3. Press `Compile directory`.
+4. Godobuf compiles all `.proto` files recursively and preserves the relative folder structure in the output directory.
+
 ### From the Command Line
 1. From the root directory of your project, run `godot4 --headless -s addons/protobuf/protobuf_cmdln.gd --input=A.proto --output=my_proto.gd`
 2. Optionally, define an alias: `alias godobuf='godot4 -s addons/protobuf/protobuf_cmdln.gd'`
 
 ### Unit tests
 0. This option is mainly for those who modify the code or want to check the stability of this version.
-1. Press `Run unit tests (proto 2)` or `Run unit tests (proto 3)` button to start the tests.
+1. Press `Run unit tests (proto 2)`, `Run unit tests (proto 3)`, or `Run batch compile tests` to start tests.
 2. See Godot `Output` for details.
 3. All possible error details are displayed in Godot `Output`.
 4. After completion, you'll see an alert window that reports the test result.<br/>
